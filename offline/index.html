@@ -52,18 +52,24 @@
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
 
     const sonic = {
       x: 50,
-      y: canvas.height - 150,
+      y: 0,
       width: 50,
       height: 50,
       dy: 0,
       gravity: 1,
       jump: -18,
-      onGround: true,
+      onGround: false,
       img: new Image()
     };
 
@@ -84,12 +90,10 @@
     };
 
     document.addEventListener("keydown", (e) => {
-      if (e.code === "Space" || e.key === "ArrowUp") {
-        if (sonic.onGround) {
-          sonic.dy = sonic.jump;
-          sonic.onGround = false;
-          if (soundEnabled) jumpSound.play();
-        }
+      if ((e.code === "Space" || e.key === "ArrowUp") && sonic.onGround) {
+        sonic.dy = sonic.jump;
+        sonic.onGround = false;
+        if (soundEnabled) jumpSound.play();
       }
     });
 
@@ -142,10 +146,11 @@
 
     function update() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       sonic.dy += sonic.gravity;
       sonic.y += sonic.dy;
 
-      if (sonic.y > canvas.height - 150) {
+      if (sonic.y >= canvas.height - 150) {
         sonic.y = canvas.height - 150;
         sonic.dy = 0;
         sonic.onGround = true;
@@ -164,6 +169,7 @@
     }
 
     sonic.img.onload = () => {
+      sonic.y = canvas.height - 150;
       setInterval(spawnObstacle, 1500);
       update();
     };
