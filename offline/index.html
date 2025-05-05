@@ -88,11 +88,19 @@
     let isGameOver = false;
 
     sonic.img = new Image();
-    sonic.img.src = "https://upload.wikimedia.org/wikipedia/en/thumb/4/43/Sonic_the_Hedgehog.png/220px-Sonic_the_Hedgehog.png";
+sonic.img.onload = () => {
+  update(); // baru jalanin game kalau gambar udah kebuka
+};
+sonic.img.src = "https://upload.wikimedia.org/wikipedia/en/thumb/4/43/Sonic_the_Hedgehog.png/220px-Sonic_the_Hedgehog.png";
 
-    function drawSonic() {
-      ctx.drawImage(sonic.img, sonic.x, sonic.y, sonic.width, sonic.height);
-    }
+function drawSonic() {
+  if (sonic.img.complete) {
+    ctx.drawImage(sonic.img, sonic.x, sonic.y, sonic.width, sonic.height);
+  } else {
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillRect(sonic.x, sonic.y, sonic.width, sonic.height);
+  }
+}
 
     function drawObstacle() {
       ctx.fillStyle = "#ef4444";
