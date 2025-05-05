@@ -84,9 +84,12 @@
   const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
   const bottom = canvas.height - top - pipeGap;
   const padding = 10; // bisa disesuaikan
-  pipes.push({ x: canvas.width, top, bottom, padding });
-}
-
+  pipes.push({
+  x: canvas.width,
+  top: top,
+  bottom: bottom,
+  padding: 10 // tambahin ini biar nggak undefined
+});
       pipes.forEach((p, i) => {
         p.x -= 1.2;
         if (p.x + pipeWidth < 0) {
