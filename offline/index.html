@@ -1,126 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Flappy Monad</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Flappy Landak</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      height: 100%;
       background: linear-gradient(to bottom, #0a021d, #100530, #000);
       overflow: hidden;
-      font-family: sans-serif;
-      color: white;
     }
     canvas {
       display: block;
-      margin: auto;
     }
     #score {
       position: absolute;
-      top: 20px;
-      left: 20px;
-      font-size: 20px;
+      top: 16px;
+      left: 16px;
+      color: white;
+      font-family: sans-serif;
+      font-size: 18px;
+      z-index: 2;
     }
   </style>
 </head>
 <body>
-<div id="score">Score: 0</div>
-<canvas id="gameCanvas"></canvas>
-<script>
-  const canvas = document.getElementById("gameCanvas");
-  const ctx = canvas.getContext("2d");
+  <div id="score">Score: 0</div>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+    const landakImg = new Image();
+landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m"; // kamu bisa ganti URL ke IPFS atau CDN kamu
 
-  let score = 0;
+    const bird = {
+      x: 80,
+      y: canvas.height / 2,
+      width: 50,
+      height: 50,
+      velocity: 0,
+      gravity: 0.28,
+      lift: -7
+    };
 
-  const bird = {
-    x: 80,
-    y: canvas.height / 2,
-    width: 30,
-    height: 30,
-    gravity: 0.4,
-    lift: -8,
-    velocity: 0,
-    color: "#00ffff"
-  };
+    let score = 0;
+    let frame = 0;
+    const pipes = [];
+    const pipeGap = 170;
+    const pipeWidth = 60;
 
-  const pipes = [];
-  const pipeWidth = 60;
-  const pipeGap = 160;
-  let frame = 0;
-
-  function drawBird() {
-    ctx.fillStyle = bird.color;
-    ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
-  }
-
-  function drawPipes() {
-    ctx.fillStyle = "#8e44ad";
-    pipes.forEach(p => {
-      ctx.fillRect(p.x, 0, pipeWidth, p.top);
-      ctx.fillRect(p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
-    });
-  }
-
-  function update() {
-    bird.velocity += bird.gravity;
-    bird.y += bird.velocity;
-
-    if (frame % 100 === 0) {
-      const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
-      const bottom = canvas.height - top - pipeGap;
-      pipes.push({ x: canvas.width, top: top, bottom: bottom });
+    function drawBird() {
+      ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
     }
 
-    pipes.forEach((p, i) => {
-      p.x -= 2;
-      if (p.x + pipeWidth < 0) {
-        pipes.splice(i, 1);
-        score++;
-        document.getElementById("score").textContent = "Score: " + score;
+    function drawPipes() {
+      ctx.fillStyle = "#8e44ad";
+      pipes.forEach(p => {
+        ctx.fillRect(p.x, 0, pipeWidth, p.top);
+        ctx.fillRect(p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
+      });
+    }
+
+    function update() {
+      frame++;
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+
+      if (frame % 100 === 0) {
+        const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
+        const bottom = canvas.height - top - pipeGap;
+        pipes.push({ x: canvas.width, top, bottom });
       }
 
-      if (
-        bird.x < p.x + pipeWidth &&
-        bird.x + bird.width > p.x &&
-        (bird.y < p.top || bird.y + bird.height > canvas.height - p.bottom)
-      ) {
+      pipes.forEach((p, i) => {
+        p.x -= 2;
+        if (p.x + pipeWidth < 0) {
+          pipes.splice(i, 1);
+          score++;
+          document.getElementById("score").innerText = "Score: " + score;
+        }
+
+        if (
+          bird.x < p.x + pipeWidth &&
+          bird.x + bird.width > p.x &&
+          (bird.y < p.top || bird.y + bird.height > canvas.height - p.bottom)
+        ) {
+          alert("Game Over! Score: " + score);
+          location.reload();
+        }
+      });
+
+      if (bird.y + bird.height > canvas.height || bird.y < 0) {
         alert("Game Over! Score: " + score);
-        document.location.reload();
+        location.reload();
       }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBird();
+      drawPipes();
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space") bird.velocity = bird.lift;
+    });
+    window.addEventListener("touchstart", () => bird.velocity = bird.lift);
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     });
 
-    if (bird.y + bird.height > canvas.height || bird.y < 0) {
-      alert("Game Over! Score: " + score);
-      document.location.reload();
-    }
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBird();
-    drawPipes();
-    update();
-    frame++;
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener("keydown", (e) => {
-    if (e.code === "Space") {
-      bird.velocity = bird.lift;
-    }
-  });
-
-  window.addEventListener("touchstart", () => {
-    bird.velocity = bird.lift;
-  });
-
-  draw();
-</script>
+    landakImg.onload = () => update();
+  </script>
 </body>
 </html>
