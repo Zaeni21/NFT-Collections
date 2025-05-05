@@ -2,211 +2,166 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Offline Sonic Enhanced</title>
+  <title>Offline Mode - Sonic Jump</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
-      margin: 0; padding: 0; height: 100%;
-      font-family: sans-serif; overflow: hidden;
+      margin: 0;
+      padding: 0;
+      height: 100%;
       background: linear-gradient(to bottom, #0a021d, #100530, #000);
-    }
-    canvas {
-      display: block;
-    }
-    #ui {
-      position: absolute;
-      top: 20px; left: 20px;
+      font-family: sans-serif;
       color: white;
-      font-size: 18px;
+      overflow: hidden;
+    }
+    #scoreboard {
+      position: absolute;
+      top: 20px;
+      left: 20px;
       z-index: 2;
-    }
-    #game-over {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 24px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 20px;
-      border-radius: 12px;
-      display: none;
-      z-index: 3;
+      font-size: 18px;
     }
     #muteBtn {
       position: absolute;
       top: 20px;
       right: 20px;
       z-index: 2;
-      background: rgba(255,255,255,0.1);
+      background: #333;
       color: white;
-      padding: 6px 12px;
       border: none;
-      border-radius: 8px;
+      padding: 8px 14px;
+      border-radius: 6px;
       cursor: pointer;
     }
-    #muteBtn:hover {
-      background: rgba(255,255,255,0.2);
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
     }
   </style>
 </head>
 <body>
-  <div id="ui">
-    <div>Score: <span id="score">0</span></div>
-    <div>Highscore: <span id="highscore">0</span></div>
-    <div>Lives: <span id="lives">3</span></div>
+  <div id="scoreboard">
+    Score: <span id="score">0</span><br />
+    Highscore: <span id="highscore">0</span><br />
+    Lives: <span id="lives">3</span>
   </div>
-  <button id="muteBtn" onclick="toggleMusic()">Mute</button>
-  <div id="game-over">Game Over!<br><button onclick="restart()">Play Again</button></div>
-  <canvas id="game"></canvas>
-
-  <!-- Sounds -->
-  <audio id="jumpSound" src="https://freesound.org/data/previews/341/341695_6262466-lq.mp3"></audio>
-  <audio id="hitSound" src="https://freesound.org/data/previews/178/178186_3248244-lq.mp3"></audio>
-  <audio id="bgMusic" src="https://files.catbox.moe/9s9n8z.mp3" loop autoplay></audio>
+  <button id="muteBtn">Mute</button>
+  <canvas id="gameCanvas"></canvas>
 
   <script>
-    const canvas = document.getElementById("game");
+    const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const scoreEl = document.getElementById("score");
-    const livesEl = document.getElementById("lives");
-    const highscoreEl = document.getElementById("highscore");
-    const gameOverEl = document.getElementById("game-over");
-    const muteBtn = document.getElementById("muteBtn");
+    const sonic = {
+      x: 50,
+      y: canvas.height - 150,
+      width: 50,
+      height: 50,
+      dy: 0,
+      gravity: 1,
+      jump: -18,
+      onGround: true,
+      img: new Image()
+    };
 
-    const jumpSound = document.getElementById("jumpSound");
-    const hitSound = document.getElementById("hitSound");
-    const bgMusic = document.getElementById("bgMusic");
+    sonic.img.src = "https://upload.wikimedia.org/wikipedia/en/4/43/Sonic_the_Hedgehog.png";
 
     let score = 0;
+    let highscore = 0;
     let lives = 3;
-    let highscore = localStorage.getItem("sonicHighscore") || 0;
-    highscoreEl.textContent = highscore;
-    let isMuted = false;
-
-    const sonic = {
-      x: 100, y: 0, width: 60, height: 60,
-      dy: 0, gravity: 0.8, jumpPower: 14,
-      grounded: false, img: null
-    };
-    sonic.img = new Image();
-    sonic.img.src = "https://upload.wikimedia.org/wikipedia/en/thumb/4/43/Sonic_the_Hedgehog.png/220px-Sonic_the_Hedgehog.png";
-
-    const ground = canvas.height - 80;
     let obstacles = [];
+    let gameSpeed = 6;
+    let soundEnabled = true;
 
-    function spawnObstacle() {
-      const size = 40 + Math.random() * 40;
-      obstacles.push({
-        x: canvas.width + Math.random() * 100,
-        y: ground - size,
-        width: size,
-        height: size,
-        speed: 6 + Math.random() * 2
-      });
-    }
+    const jumpSound = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7f4e2df950.mp3");
 
-    function jump() {
-      if (sonic.grounded) {
-        sonic.dy = -sonic.jumpPower;
-        sonic.grounded = false;
-        if (!isMuted) {
-          jumpSound.currentTime = 0;
-          jumpSound.play();
+    document.getElementById("muteBtn").onclick = () => {
+      soundEnabled = !soundEnabled;
+      document.getElementById("muteBtn").innerText = soundEnabled ? "Mute" : "Unmute";
+    };
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" || e.key === "ArrowUp") {
+        if (sonic.onGround) {
+          sonic.dy = sonic.jump;
+          sonic.onGround = false;
+          if (soundEnabled) jumpSound.play();
         }
       }
-    }
-
-    function toggleMusic() {
-      isMuted = !isMuted;
-      bgMusic.muted = isMuted;
-      jumpSound.muted = isMuted;
-      hitSound.muted = isMuted;
-      muteBtn.textContent = isMuted ? "Unmute" : "Mute";
-    }
+    });
 
     function drawSonic() {
       ctx.drawImage(sonic.img, sonic.x, sonic.y, sonic.width, sonic.height);
     }
 
+    function spawnObstacle() {
+      obstacles.push({
+        x: canvas.width,
+        y: canvas.height - 50,
+        width: 40,
+        height: 40
+      });
+    }
+
     function drawObstacles() {
-      ctx.fillStyle = "#f43f5e";
-      for (let ob of obstacles) {
-        ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+      ctx.fillStyle = "red";
+      for (let o of obstacles) {
+        o.x -= gameSpeed;
+        ctx.fillRect(o.x, o.y, o.width, o.height);
       }
+    }
+
+    function checkCollision() {
+      for (let o of obstacles) {
+        if (
+          sonic.x < o.x + o.width &&
+          sonic.x + sonic.width > o.x &&
+          sonic.y < o.y + o.height &&
+          sonic.y + sonic.height > o.y
+        ) {
+          lives--;
+          obstacles = [];
+          sonic.y = canvas.height - 150;
+          sonic.dy = 0;
+          sonic.onGround = true;
+          if (lives <= 0) resetGame();
+          return;
+        }
+      }
+    }
+
+    function resetGame() {
+      if (score > highscore) highscore = score;
+      score = 0;
+      lives = 3;
+      obstacles = [];
     }
 
     function update() {
-      if (lives <= 0) return;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       sonic.dy += sonic.gravity;
       sonic.y += sonic.dy;
 
-      if (sonic.y + sonic.height >= ground) {
-        sonic.y = ground - sonic.height;
+      if (sonic.y > canvas.height - 150) {
+        sonic.y = canvas.height - 150;
         sonic.dy = 0;
-        sonic.grounded = true;
+        sonic.onGround = true;
       }
-
-      for (let ob of obstacles) {
-        ob.x -= ob.speed;
-      }
-
-      obstacles = obstacles.filter(ob => ob.x + ob.width > 0);
-
-      for (let i = 0; i < obstacles.length; i++) {
-        const ob = obstacles[i];
-        if (
-          sonic.x < ob.x + ob.width &&
-          sonic.x + sonic.width > ob.x &&
-          sonic.y < ob.y + ob.height &&
-          sonic.y + sonic.height > ob.y
-        ) {
-          obstacles.splice(i, 1);
-          lives--;
-          livesEl.textContent = lives;
-          if (!isMuted) hitSound.play();
-          if (lives <= 0) {
-            gameOverEl.style.display = "block";
-            if (score > highscore) {
-              localStorage.setItem("sonicHighscore", score);
-              highscoreEl.textContent = score;
-            }
-            return;
-          }
-        }
-      }
-
-      score++;
-      scoreEl.textContent = score;
 
       drawSonic();
       drawObstacles();
+      checkCollision();
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("highscore").innerText = highscore;
+      document.getElementById("lives").innerText = lives;
+
+      score++;
       requestAnimationFrame(update);
     }
-
-    function restart() {
-      lives = 3;
-      score = 0;
-      obstacles = [];
-      gameOverEl.style.display = "none";
-      livesEl.textContent = lives;
-      scoreEl.textContent = score;
-      update();
-    }
-
-    window.addEventListener("keydown", e => {
-      if (e.code === "Space" || e.code === "ArrowUp") jump();
-    });
-    window.addEventListener("touchstart", jump);
-    window.addEventListener("resize", () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
 
     sonic.img.onload = () => {
       setInterval(spawnObstacle, 1500);
