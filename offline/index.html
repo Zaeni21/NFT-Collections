@@ -16,17 +16,48 @@
     }
     #score {
       position: absolute;
-      top: 15px;
+      top: 20px;
       left: 20px;
       color: white;
+      font-size: 18px;
       font-family: sans-serif;
-      font-size: 20px;
       z-index: 2;
+    }
+    #game-over {
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: white;
+      width: 100%;
+      height: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      font-family: sans-serif;
+      z-index: 3;
+    }
+    #game-over h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+    #restart-btn {
+      padding: 10px 20px;
+      background-color: #8b5cf6;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
   <div id="score">Score: 0</div>
+  <div id="game-over">
+    <h1>Game Over!</h1>
+    <button id="restart-btn">Main Lagi</button>
+  </div>
   <canvas id="game"></canvas>
   <script>
     const canvas = document.getElementById('game');
@@ -34,23 +65,30 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    const birdImg = new Image();
+    birdImg.src = "https://upload.wikimedia.org/wikipedia/commons/4/49/Red_Bird_-_Angry_Birds.png";
+
     let bird = {
       x: 80,
       y: canvas.height / 2,
       width: 40,
       height: 40,
-      gravity: 0.6,
-      lift: -10,
+      gravity: 0.4,
+      lift: -8,
       velocity: 0
     };
 
     let pipes = [];
     let score = 0;
     let frame = 0;
+    let isGameOver = false;
+
+    const scoreText = document.getElementById("score");
+    const gameOverScreen = document.getElementById("game-over");
+    const restartBtn = document.getElementById("restart-btn");
 
     function drawBird() {
-      ctx.fillStyle = "#00ffff";
-      ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+      ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
     }
 
     function drawPipes() {
@@ -62,6 +100,8 @@
     }
 
     function update() {
+      if (isGameOver) return;
+
       frame++;
       bird.velocity += bird.gravity;
       bird.y += bird.velocity;
@@ -75,7 +115,8 @@
           width: 60,
           top: top,
           bottom: bottom,
-          speed: 3
+          speed: 3,
+          passed: false
         });
       }
 
@@ -83,20 +124,18 @@
         let pipe = pipes[i];
         pipe.x -= pipe.speed;
 
-        // Collision
         if (
           bird.x < pipe.x + pipe.width &&
           bird.x + bird.width > pipe.x &&
           (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)
         ) {
-          alert("Game Over! Score: " + score);
-          location.reload();
+          endGame();
         }
 
         if (pipe.x + pipe.width < bird.x && !pipe.passed) {
           pipe.passed = true;
           score++;
-          document.getElementById("score").innerText = "Score: " + score;
+          scoreText.innerText = "Score: " + score;
         }
 
         if (pipe.x + pipe.width < 0) {
@@ -105,8 +144,7 @@
       }
 
       if (bird.y + bird.height > canvas.height || bird.y < 0) {
-        alert("Game Over! Score: " + score);
-        location.reload();
+        endGame();
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -116,8 +154,19 @@
     }
 
     function flap() {
-      bird.velocity = bird.lift;
+      if (!isGameOver) {
+        bird.velocity = bird.lift;
+      }
     }
+
+    function endGame() {
+      isGameOver = true;
+      gameOverScreen.style.display = "flex";
+    }
+
+    restartBtn.onclick = () => {
+      location.reload();
+    };
 
     document.addEventListener("keydown", e => {
       if (e.code === "Space" || e.key === "ArrowUp") flap();
