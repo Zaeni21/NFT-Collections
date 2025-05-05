@@ -54,8 +54,10 @@ landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3iv
     const pipeWidth = 60;
 
     function drawBird() {
-      ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
-    }
+  if (landakImg.complete) {
+    ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
+  }
+}
 
     function drawPipes() {
       ctx.fillStyle = "#8e44ad";
