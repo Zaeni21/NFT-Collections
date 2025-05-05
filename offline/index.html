@@ -2,177 +2,134 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Offline Mode - Sonic Jump</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Monad</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      height: 100%;
-      background: linear-gradient(to bottom, #0a021d, #100530, #000);
-      font-family: sans-serif;
-      color: white;
       overflow: hidden;
-    }
-    #scoreboard {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 2;
-      font-size: 18px;
-    }
-    #muteBtn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 2;
-      background: #333;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
+      background: linear-gradient(to bottom, #0a021d, #100530, #000);
     }
     canvas {
       display: block;
-      width: 100vw;
-      height: 100vh;
+    }
+    #score {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      color: white;
+      font-family: sans-serif;
+      font-size: 20px;
+      z-index: 2;
     }
   </style>
 </head>
 <body>
-  <div id="scoreboard">
-    Score: <span id="score">0</span><br />
-    Highscore: <span id="highscore">0</span><br />
-    Lives: <span id="lives">3</span>
-  </div>
-  <button id="muteBtn">Mute</button>
-  <canvas id="gameCanvas"></canvas>
-
+  <div id="score">Score: 0</div>
+  <canvas id="game"></canvas>
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
-    const sonic = {
-      x: 50,
-      y: 0,
-      width: 50,
-      height: 50,
-      dy: 0,
-      gravity: 1,
-      jump: -18,
-      onGround: false,
-      img: new Image()
+    let bird = {
+      x: 80,
+      y: canvas.height / 2,
+      width: 40,
+      height: 40,
+      gravity: 0.6,
+      lift: -10,
+      velocity: 0
     };
 
-    sonic.img.src = "https://upload.wikimedia.org/wikipedia/en/4/43/Sonic_the_Hedgehog.png";
-
+    let pipes = [];
     let score = 0;
-    let highscore = 0;
-    let lives = 3;
-    let obstacles = [];
-    let gameSpeed = 6;
-    let soundEnabled = true;
+    let frame = 0;
 
-    const jumpSound = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7f4e2df950.mp3");
+    function drawBird() {
+      ctx.fillStyle = "#00ffff";
+      ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+    }
 
-    document.getElementById("muteBtn").onclick = () => {
-      soundEnabled = !soundEnabled;
-      document.getElementById("muteBtn").innerText = soundEnabled ? "Mute" : "Unmute";
-    };
-
-    document.addEventListener("keydown", (e) => {
-      if ((e.code === "Space" || e.key === "ArrowUp") && sonic.onGround) {
-        sonic.dy = sonic.jump;
-        sonic.onGround = false;
-        if (soundEnabled) jumpSound.play();
+    function drawPipes() {
+      ctx.fillStyle = "#ff4081";
+      for (let pipe of pipes) {
+        ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+        ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom);
       }
-    });
-
-    function drawSonic() {
-      ctx.drawImage(sonic.img, sonic.x, sonic.y, sonic.width, sonic.height);
-    }
-
-    function spawnObstacle() {
-      obstacles.push({
-        x: canvas.width,
-        y: canvas.height - 50,
-        width: 40,
-        height: 40
-      });
-    }
-
-    function drawObstacles() {
-      ctx.fillStyle = "red";
-      for (let o of obstacles) {
-        o.x -= gameSpeed;
-        ctx.fillRect(o.x, o.y, o.width, o.height);
-      }
-    }
-
-    function checkCollision() {
-      for (let o of obstacles) {
-        if (
-          sonic.x < o.x + o.width &&
-          sonic.x + sonic.width > o.x &&
-          sonic.y < o.y + o.height &&
-          sonic.y + sonic.height > o.y
-        ) {
-          lives--;
-          obstacles = [];
-          sonic.y = canvas.height - 150;
-          sonic.dy = 0;
-          sonic.onGround = true;
-          if (lives <= 0) resetGame();
-          return;
-        }
-      }
-    }
-
-    function resetGame() {
-      if (score > highscore) highscore = score;
-      score = 0;
-      lives = 3;
-      obstacles = [];
     }
 
     function update() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      frame++;
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
 
-      sonic.dy += sonic.gravity;
-      sonic.y += sonic.dy;
-
-      if (sonic.y >= canvas.height - 150) {
-        sonic.y = canvas.height - 150;
-        sonic.dy = 0;
-        sonic.onGround = true;
+      if (frame % 90 === 0) {
+        const gap = 160;
+        const top = Math.random() * (canvas.height - gap - 200) + 50;
+        const bottom = canvas.height - (top + gap);
+        pipes.push({
+          x: canvas.width,
+          width: 60,
+          top: top,
+          bottom: bottom,
+          speed: 3
+        });
       }
 
-      drawSonic();
-      drawObstacles();
-      checkCollision();
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        let pipe = pipes[i];
+        pipe.x -= pipe.speed;
 
-      document.getElementById("score").innerText = score;
-      document.getElementById("highscore").innerText = highscore;
-      document.getElementById("lives").innerText = lives;
+        // Collision
+        if (
+          bird.x < pipe.x + pipe.width &&
+          bird.x + bird.width > pipe.x &&
+          (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)
+        ) {
+          alert("Game Over! Score: " + score);
+          location.reload();
+        }
 
-      score++;
+        if (pipe.x + pipe.width < bird.x && !pipe.passed) {
+          pipe.passed = true;
+          score++;
+          document.getElementById("score").innerText = "Score: " + score;
+        }
+
+        if (pipe.x + pipe.width < 0) {
+          pipes.splice(i, 1);
+        }
+      }
+
+      if (bird.y + bird.height > canvas.height || bird.y < 0) {
+        alert("Game Over! Score: " + score);
+        location.reload();
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBird();
+      drawPipes();
       requestAnimationFrame(update);
     }
 
-    sonic.img.onload = () => {
-      sonic.y = canvas.height - 150;
-      setInterval(spawnObstacle, 1500);
-      update();
-    };
+    function flap() {
+      bird.velocity = bird.lift;
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.key === "ArrowUp") flap();
+    });
+
+    document.addEventListener("touchstart", flap);
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    update();
   </script>
 </body>
 </html>
