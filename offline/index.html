@@ -81,10 +81,11 @@
       bird.y += bird.velocity;
 
       if (frame % 100 === 0) {
-        const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
-        const bottom = canvas.height - top - pipeGap;
-        pipes.push({ x: canvas.width, top: top, bottom: bottom });
-      }
+  const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
+  const bottom = canvas.height - top - pipeGap;
+  const padding = 10; // bisa disesuaikan
+  pipes.push({ x: canvas.width, top, bottom, padding });
+}
 
       pipes.forEach((p, i) => {
         p.x -= 1.2;
@@ -95,9 +96,10 @@
         }
 
         if (
-          bird.x < p.x + pipeWidth &&
-          bird.x + bird.width > p.x &&
-          (bird.y < p.top || bird.y + bird.height > canvas.height - p.bottom)
+  bird.x < p.x + pipeWidth - p.padding &&
+  bird.x + bird.width > p.x + p.padding &&
+  (bird.y < p.top || bird.y + bird.height > canvas.height - p.bottom)
+)
         ) {
           showGameOver(score);
           return;
