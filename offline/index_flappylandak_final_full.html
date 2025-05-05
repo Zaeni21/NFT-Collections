@@ -1,0 +1,262 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flappy Landak - Multi Wallet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/core/dist/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/injected-wallets/dist/umd/index.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #0a021d, #100530, #000);
+      overflow: hidden;
+    }
+    canvas { display: block; }
+    #score {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      color: white;
+      font-family: sans-serif;
+      font-size: 18px;
+      z-index: 2;
+    }
+    #mode-selection {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      text-align: center;
+    }
+    #mode-selection button {
+      margin: 10px;
+      padding: 14px 28px;
+      background: #9333ea;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #leaderboard-popup {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.95);
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 9999;
+      width: 300px;
+      color: white;
+    }
+    #leaderboard-popup h3 { text-align: center; }
+    #leaderboard-popup ul {
+      list-style: none;
+      padding: 0;
+    }
+    #leaderboard-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 3;
+    }
+    #leaderboard-btn button {
+      padding: 10px 20px;
+      background: #4f46e5;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+<div id="score">Score: 0</div>
+<div id="mode-selection">
+  <button onclick="startOffchain()">Play Offchain</button>
+  <button onclick="connectWallet()">Play Onchain (Monad)</button>
+</div>
+<div id="leaderboard-btn">
+  <button onclick="showLeaderboard()">Leaderboard</button>
+</div>
+<div id="leaderboard-popup">
+  <h3>Top 10 Players</h3>
+  <ul id="leaderboard-list"></ul>
+  <button onclick="document.getElementById('leaderboard-popup').style.display='none'">Close</button>
+</div>
+<canvas id="gameCanvas"></canvas>
+<script>
+// Wallet Connect
+const injected = window.injectedWalletsModule.default();
+const onboard = window.web3OnboardCore.init({
+  wallets: [injected],
+  chains: [{
+    id: '0x279F',
+    token: 'MON',
+    label: 'Monad Testnet',
+    rpcUrl: 'https://testnet-rpc.monad.xyz'
+  }],
+  appMetadata: {
+    name: "Flappy Landak",
+    icon: "<svg></svg>",
+    description: "Game with multi-wallet & onchain score"
+  }
+});
+let walletAddress = null;
+
+async function connectWallet() {
+  const wallets = await onboard.connectWallet();
+  if (wallets[0]) {
+    walletAddress = wallets[0].accounts[0].address;
+    document.getElementById("mode-selection").style.display = "none";
+    update(); // start game
+  }
+}
+function startOffchain() {
+  document.getElementById("mode-selection").style.display = "none";
+  update(); // start game
+}
+
+// --- Game Logic & Smart Contract Interaction ---
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let landakImg = new Image();
+landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m";
+
+const bambooImg = new Image();
+bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtvephhgmcr7rb57rjxxubbpkxie5bl7ycm5wciqf7bjlsi";
+
+let gravity = 0.3;
+let velocity = 0;
+let jump = -6;
+let playerY = canvas.height / 2;
+let pipes = [];
+let score = 0;
+let playing = true;
+
+function resetGame() {
+  velocity = 0;
+  playerY = canvas.height / 2;
+  pipes = [];
+  score = 0;
+  playing = true;
+}
+
+function update() {
+  if (!playing) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  velocity += gravity;
+  playerY += velocity;
+
+  if (playerY + 40 > canvas.height || playerY < 0) return gameOver();
+
+  if (Math.random() < 0.02) {
+    let top = Math.random() * (canvas.height / 2);
+    pipes.push({ x: canvas.width, y: top });
+  }
+
+  pipes.forEach((pipe, i) => {
+    pipe.x -= 2.5;
+    if (
+      pipe.x < 100 &&
+      pipe.x + 60 > 60 &&
+      (playerY < pipe.y || playerY + 40 > pipe.y + 150)
+    ) {
+      playing = false;
+      return gameOver();
+    }
+    if (pipe.x + 60 < 0) pipes.splice(i, 1);
+  });
+
+  pipes.forEach((pipe) => {
+    ctx.drawImage(bambooImg, pipe.x, 0, 60, pipe.y);
+    ctx.drawImage(bambooImg, pipe.x, pipe.y + 150, 60, canvas.height);
+  });
+
+  ctx.drawImage(landakImg, 60, playerY, 40, 40);
+  ctx.fillStyle = "white";
+  ctx.font = "20px sans-serif";
+  ctx.fillText(`Score: ${score}`, 20, 30);
+  score++;
+  requestAnimationFrame(update);
+}
+
+document.addEventListener("keydown", () => {
+  if (!playing) return;
+  velocity = jump;
+});
+
+function gameOver() {
+  playing = false;
+  if (walletAddress) submitScore(score);
+  showGameOver(score);
+}
+
+function showGameOver(score) {
+  const overlay = document.createElement("div");
+  overlay.innerHTML = `
+    <div style="position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.85);display:flex;flex-direction:column;
+      justify-content:center;align-items:center;color:white;font-family:sans-serif;z-index:9999;">
+      <h1 style="font-size:2em;margin-bottom:10px;">Game Over!</h1>
+      <p style="font-size:1.2em;margin-bottom:20px;">Score: ${score}</p>
+      <button onclick="location.reload()" style="padding:10px 20px;
+        background:#9333ea;border:none;border-radius:8px;color:white;font-weight:bold;cursor:pointer;">Play Again</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// Smart contract interaction
+const contractAddress = "0x228a78f7484dcDD40C33C9Bfb9F7eFEb3d2655D6";
+const abi = [...]; // shortened for now, will paste full ABI in next step
+
+async function submitScore(score) {
+  try {
+    const ethersProvider = new ethers.providers.Web3Provider(onboard.state.get().wallets[0].provider, "any");
+    const signer = ethersProvider.getSigner();
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+    await contract.submitScore(score);
+    console.log("Score submitted:", score);
+  } catch (e) {
+    console.error("Failed to submit score", e);
+  }
+}
+
+async function showLeaderboard() {
+  try {
+    const provider = new ethers.providers.JsonRpcProvider("https://testnet-rpc.monad.xyz");
+    const contract = new ethers.Contract(contractAddress, abi, provider);
+    const leaderboard = await contract.getTopPlayers();
+
+    const list = document.getElementById("leaderboard-list");
+    list.innerHTML = "";
+    leaderboard.forEach((p, i) => {
+      const li = document.createElement("li");
+      li.textContent = `#${i + 1} ${p.addr.slice(0, 6)}...${p.addr.slice(-4)} — ${p.score}`;
+      if (walletAddress && p.addr.toLowerCase() === walletAddress.toLowerCase()) {
+        li.style.color = "#9333ea";
+        li.style.fontWeight = "bold";
+      }
+      list.appendChild(li);
+    });
+    document.getElementById("leaderboard-popup").style.display = "block";
+  } catch (err) {
+    console.error("Leaderboard error", err);
+  }
+}
+
+</script>
+</body>
+</html>
