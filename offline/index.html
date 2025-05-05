@@ -145,8 +145,42 @@
   border-radius: 8px;
   cursor: pointer;
 }
-</style></head>
-<body><div id="loader"><div class="loader-text">Loading onchain vibes...</div></div>
+</style>
+<!-- Sequence Wallet SDK -->
+<script src="https://cdn.sequence.xyz/web-sdk/sequence-connect-v2-latest.js"></script>
+<script>
+  async function connectSequenceWallet() {
+    const { SequenceConnect } = window.SequenceConnect;
+
+    const wallet = new SequenceConnect({
+      projectAccessKey: "AQAAAAAAAKLUJ5WZe7Sg_ybHQmfexsCIq8I",
+      waasConfigKey: "eyJwcm9qZWN0SWQiOjQxNjg0LCJycGNTZXJ2ZXIiOiJodHRwczovL3dhYXMuc2VxdWVuY2UuYXBwIn0=",
+      defaultChainId: 10143,
+      theme: "dark",
+      signIn: {
+        projectName: "Javanese",
+        logoUrl: "https://storage.googleapis.com/sequence-prod-cluster-builder/projects/41684/wallet/signInlogoUrl_c3dde556b7fab6895155f607f7a092009782ee3dddabdfc47d99c2177e663a69.png"
+      }
+    });
+
+    try {
+      const connectedWallet = await wallet.connect();
+      console.log("Connected wallet:", connectedWallet);
+    } catch (err) {
+      alert("Gagal konek wallet");
+      console.error(err);
+    }
+  }
+</script>
+
+</head>
+<body
+
+<!-- Connect Wallet Button -->
+<button onclick="connectSequenceWallet()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background: #9333ea; color: white; padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer;">
+  Connect Wallet
+</button>
+><div id="loader"><div class="loader-text">Loading onchain vibes...</div></div>
 <div id="score">Score: 0</div>
 <div id="mode-selection">
 <button onclick="startOffchain()">Play Offchain</button>
