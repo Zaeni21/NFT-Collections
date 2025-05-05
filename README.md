@@ -10,7 +10,7 @@ This is a responsive NFT gallery built with HTML and Tailwind CSS, showcasing 10
 
 ## Preview
 You can view the site live at:
-> [https://javanese.vercel.app/]
+> https://javanese.vercel.app/
 
 ## Social
 - Twitter: [@JAWIRNFT](https://twitter.com/JAWIRNFT)
