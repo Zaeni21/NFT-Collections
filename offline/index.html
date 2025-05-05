@@ -63,15 +63,13 @@
     }
 
     function drawPipes() {
-  pipes.forEach(p => {
-    if (bambooImg.complete) {
-      // Bambu atas
-      ctx.drawImage(bambooImg, p.x, 0, pipeWidth, p.top);
-      // Bambu bawah
-      ctx.drawImage(bambooImg, p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
+      pipes.forEach(p => {
+        if (bambooImg.complete) {
+          ctx.drawImage(bambooImg, p.x, 0, pipeWidth, p.top);
+          ctx.drawImage(bambooImg, p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
+        }
+      });
     }
-  });
-}
 
     function update() {
       frame++;
@@ -79,15 +77,12 @@
       bird.y += bird.velocity;
 
       if (frame % 100 === 0) {
-  const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
-  const bottom = canvas.height - top - pipeGap;
-  const padding = 10; // bisa disesuaikan
-  pipes.push({
-  x: canvas.width,
-  top: top,
-  bottom: bottom,
-  padding: 10 // tambahin ini biar nggak undefined
-});
+        const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
+        const bottom = canvas.height - top - pipeGap;
+        const padding = 10;
+        pipes.push({ x: canvas.width, top, bottom, padding });
+      }
+
       pipes.forEach((p, i) => {
         p.x -= 1.2;
         if (p.x + pipeWidth < 0) {
@@ -97,10 +92,9 @@
         }
 
         if (
-  bird.x < p.x + pipeWidth - p.padding &&
-  bird.x + bird.width > p.x + p.padding &&
-  (bird.y < p.top || bird.y + bird.height > canvas.height - p.bottom)
-)
+          bird.x < p.x + pipeWidth - p.padding &&
+          bird.x + bird.width > p.x + p.padding &&
+          (bird.y < p.top || bird.y + bird.height > canvas.height - p.bottom)
         ) {
           showGameOver(score);
           return;
@@ -121,7 +115,9 @@
     window.addEventListener("keydown", e => {
       if (e.code === "Space") bird.velocity = bird.lift;
     });
+
     window.addEventListener("touchstart", () => bird.velocity = bird.lift);
+
     window.addEventListener("resize", () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
