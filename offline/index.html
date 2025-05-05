@@ -63,17 +63,15 @@
     }
 
     function drawPipes() {
-      ctx.fillStyle = "#8e44ad";
-      pipes.forEach(p => {
-        if (bambooImg.complete && bambooImg.naturalHeight !== 0) {
-          ctx.drawImage(bambooImg, p.x, 0, pipeWidth, p.top); // bambu atas
-          ctx.drawImage(bambooImg, p.x, canvas.height - p.bottom, pipeWidth, p.bottom); // bambu bawah
-        } else {
-          ctx.fillRect(p.x, 0, pipeWidth, p.top);
-          ctx.fillRect(p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
-        }
-      });
+  pipes.forEach(p => {
+    if (bambooImg.complete) {
+      // Bambu atas
+      ctx.drawImage(bambooImg, p.x, 0, pipeWidth, p.top);
+      // Bambu bawah
+      ctx.drawImage(bambooImg, p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
     }
+  });
+}
 
     function update() {
       frame++;
