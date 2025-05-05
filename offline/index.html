@@ -61,7 +61,11 @@ landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3iv
     
 const bambooImg = new Image();
 bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtvephhgmcr7rb57rjxxubbpkxie5bl7ycm5wciqf7bjlsi";
-    
+    landakImg.onload = () => {
+  bambooImg.onload = () => {
+    update();
+  };
+};
     function drawPipes() {
   pipes.forEach(p => {
     if (bambooImg.complete) {
