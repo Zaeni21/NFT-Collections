@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Flappy Landak</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
     html, body {
       margin: 0;
@@ -23,33 +24,117 @@
       font-size: 18px;
       z-index: 2;
     }
+    #mode-selection {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      text-align: center;
+    }
+    #mode-selection button {
+      margin: 10px;
+      padding: 14px 28px;
+      background: #9333ea;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #leaderboard-popup {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.95);
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 9999;
+      width: 300px;
+      color: white;
+    }
+    #leaderboard-popup h3 {
+      text-align: center;
+    }
+    #leaderboard-popup ul {
+      list-style: none;
+      padding: 0;
+    }
+    #leaderboard-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 3;
+    }
+    #leaderboard-btn button {
+      padding: 10px 20px;
+      background: #4f46e5;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
   <div id="score">Score: 0</div>
+  <div id="mode-selection">
+    <button onclick="startOffchain()">Play Offchain</button>
+    <button onclick="connectWallet()">Play Onchain (Monad)</button>
+  </div>
+  <div id="leaderboard-btn">
+    <button onclick="showLeaderboard()">Leaderboard</button>
+  </div>
+  <div id="leaderboard-popup">
+    <h3>Top 10 Players</h3>
+    <ul id="leaderboard-list"></ul>
+    <button onclick="document.getElementById('leaderboard-popup').style.display='none'">Close</button>
+  </div>
   <canvas id="gameCanvas"></canvas>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    let onchain = false;
+    let walletAddress = null;
+    const contractAddress = "0x228a78f7484dcDD40C33C9Bfb9F7eFEb3d2655D6";
+    const fullABI = [
+      {
+        "inputs": [],
+        "name": "getTopPlayers",
+        "outputs": [{
+          "components": [
+            { "internalType": "address", "name": "addr", "type": "address" },
+            { "internalType": "uint256", "name": "score", "type": "uint256" }
+          ],
+          "internalType": "struct Leaderboard.Player[]",
+          "name": "",
+          "type": "tuple[]"
+        }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [ { "internalType": "uint256", "name": "newScore", "type": "uint256" } ],
+        "name": "submitScore",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+
     const landakImg = new Image();
     landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m";
-
     const bambooImg = new Image();
     bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtvephhgmcr7rb57rjxxubbpkxie5bl7ycm5wciqf7bjlsi";
 
-    const bird = {
-      x: 80,
-      y: canvas.height / 2,
-      width: 50,
-      height: 50,
-      velocity: 0,
-      gravity: 0.06,
-      lift: -2.2
-    };
-
+    const bird = { x: 80, y: canvas.height / 2, width: 50, height: 50, velocity: 0, gravity: 0.06, lift: -2.2 };
     let score = 0;
     let frame = 0;
     const pipes = [];
@@ -57,9 +142,7 @@
     const pipeWidth = 60;
 
     function drawBird() {
-      if (landakImg.complete) {
-        ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
-      }
+      if (landakImg.complete) ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
     }
 
     function drawPipes() {
@@ -79,8 +162,7 @@
       if (frame % 150 === 0) {
         const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
         const bottom = canvas.height - top - pipeGap;
-        const padding = 10;
-        pipes.push({ x: canvas.width, top, bottom, padding });
+        pipes.push({ x: canvas.width, top, bottom, padding: 10 });
       }
 
       pipes.forEach((p, i) => {
@@ -112,12 +194,100 @@
       requestAnimationFrame(update);
     }
 
-    window.addEventListener("keydown", e => {
-      if (e.code === "Space") bird.velocity = bird.lift;
-    });
+    function showGameOver(score) {
+      if (onchain) submitScoreOnchain(score);
+      const overlay = document.createElement('div');
+      overlay.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
+        justify-content: center; align-items: center; color: white; font-family: sans-serif; z-index: 9999;">
+          <h1 style="font-size: 2em; margin-bottom: 10px;">Game Over!</h1>
+          <p style="font-size: 1.2em; margin-bottom: 20px;">Score: ${score}</p>
+          <button onclick="location.reload()" style="padding: 10px 20px;
+          background: #9333ea; border: none; border-radius: 8px; color: white;
+          font-weight: bold; cursor: pointer;">Play Again</button>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
 
+    function startOffchain() {
+      onchain = false;
+      document.getElementById("mode-selection").style.display = "none";
+      update();
+    }
+
+    async function connectWallet() {
+      if (!window.ethereum) return alert("Install MetaMask dulu bro");
+
+      try {
+        await ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x279F',
+            chainName: 'Monad Testnet',
+            rpcUrls: ['https://testnet-rpc.monad.xyz'],
+            nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
+            blockExplorerUrls: ['https://testnet.monadexplorer.com']
+          }]
+        });
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        walletAddress = await provider.getSigner().getAddress();
+        onchain = true;
+        document.getElementById("mode-selection").style.display = "none";
+        update();
+      } catch (err) {
+        console.error(err);
+        alert("Gagal connect wallet");
+      }
+    }
+
+    async function submitScoreOnchain(score) {
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(contractAddress, fullABI, signer);
+        const tx = await contract.submitScore(score);
+        await tx.wait();
+        console.log("Score submitted!");
+      } catch (err) {
+        console.error("Gagal submit:", err);
+      }
+    }
+
+    async function showLeaderboard() {
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const userAddress = await signer.getAddress();
+
+        const contract = new ethers.Contract(contractAddress, fullABI, provider);
+        const players = await contract.getTopPlayers();
+
+        const ul = document.getElementById("leaderboard-list");
+        ul.innerHTML = "";
+
+        players.forEach((player, index) => {
+          const li = document.createElement("li");
+          const shortAddr = player.addr.slice(0, 6) + "..." + player.addr.slice(-4);
+          li.innerHTML = `${index + 1}. ${shortAddr} - ${player.score}`;
+          if (player.addr.toLowerCase() === userAddress.toLowerCase()) {
+            li.style.color = "#22d3ee";
+            li.style.fontWeight = "bold";
+          }
+          ul.appendChild(li);
+        });
+
+        document.getElementById("leaderboard-popup").style.display = "block";
+      } catch (err) {
+        alert("Gagal ambil leaderboard!");
+        console.error(err);
+      }
+    }
+
+    window.addEventListener("keydown", e => { if (e.code === "Space") bird.velocity = bird.lift; });
     window.addEventListener("touchstart", () => bird.velocity = bird.lift);
-
     window.addEventListener("resize", () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -125,40 +295,9 @@
 
     landakImg.onload = () => {
       bambooImg.onload = () => {
-        update();
+        // nunggu user pilih mode
       };
     };
-
-    function showGameOver(score) {
-      const overlay = document.createElement('div');
-      overlay.innerHTML = `
-        <div style="
-          position: fixed;
-          top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0,0,0,0.85);
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          color: white;
-          font-family: sans-serif;
-          z-index: 9999;
-        ">
-          <h1 style="font-size: 2em; margin-bottom: 10px;">Game Over!</h1>
-          <p style="font-size: 1.2em; margin-bottom: 20px;">Score: ${score}</p>
-          <button onclick="location.reload()" style="
-            padding: 10px 20px;
-            background: #9333ea;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-          ">Play Again</button>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-    }
   </script>
 </body>
 </html>
