@@ -76,7 +76,7 @@
       bird.velocity += bird.gravity;
       bird.y += bird.velocity;
 
-      if (frame % 100 === 0) {
+      if (frame % 150 === 0) {
         const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
         const bottom = canvas.height - top - pipeGap;
         const padding = 10;
