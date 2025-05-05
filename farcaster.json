@@ -1,0 +1,15 @@
+{
+  "version": "vNext",
+  "app": {
+    "name": "Flappy Landak",
+    "description": "Mainkan Flappy Landak langsung dari Warpcast",
+    "icon": "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m",
+    "splash": {
+      "image": "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m",
+      "background": "#000000"
+    }
+  },
+  "frame": {
+    "url": "https://javanese.vercel.app/offline/index.html"
+  }
+}
