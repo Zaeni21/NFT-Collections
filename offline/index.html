@@ -44,7 +44,7 @@ landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3iv
       height: 50,
       velocity: 0,
       gravity: 0.06,
-      lift: -3
+      lift: -2.2
     };
 
     let score = 0;
@@ -58,14 +58,18 @@ landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3iv
     ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
   }
 }
-
+    
+const bambooImg = new Image();
+bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtvephhgmcr7rb57rjxxubbpkxie5bl7ycm5wciqf7bjlsi";
+    
     function drawPipes() {
-      ctx.fillStyle = "#8e44ad";
-      pipes.forEach(p => {
-        ctx.fillRect(p.x, 0, pipeWidth, p.top);
-        ctx.fillRect(p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
-      });
+  pipes.forEach(p => {
+    if (bambooImg.complete) {
+      ctx.drawImage(bambooImg, p.x, 0, pipeWidth, p.top); // bambu atas
+      ctx.drawImage(bambooImg, p.x, p.bottom, pipeWidth, canvas.height - p.bottom); // bambu bawah
     }
+  });
+}
 
     function update() {
       frame++;
@@ -79,7 +83,7 @@ landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3iv
       }
 
       pipes.forEach((p, i) => {
-        p.x -= 2;
+        p.x -= 1.2;
         if (p.x + pipeWidth < 0) {
           pipes.splice(i, 1);
           score++;
