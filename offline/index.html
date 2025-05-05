@@ -35,7 +35,10 @@
     canvas.height = window.innerHeight;
 
     const landakImg = new Image();
-landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m"; // kamu bisa ganti URL ke IPFS atau CDN kamu
+    landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m";
+
+    const bambooImg = new Image();
+    bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtvephhgmcr7rb57rjxxubbpkxie5bl7ycm5wciqf7bjlsi";
 
     const bird = {
       x: 80,
@@ -54,26 +57,23 @@ landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3iv
     const pipeWidth = 60;
 
     function drawBird() {
-  if (landakImg.complete) {
-    ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
-  }
-}
-    
-const bambooImg = new Image();
-bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtvephhgmcr7rb57rjxxubbpkxie5bl7ycm5wciqf7bjlsi";
-    landakImg.onload = () => {
-  bambooImg.onload = () => {
-    update();
-  };
-};
-    function drawPipes() {
-  pipes.forEach(p => {
-    if (bambooImg.complete) {
-      ctx.drawImage(bambooImg, p.x, 0, pipeWidth, p.top); // bambu atas
-      ctx.drawImage(bambooImg, p.x, p.bottom, pipeWidth, canvas.height - p.bottom); // bambu bawah
+      if (landakImg.complete) {
+        ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
+      }
     }
-  });
-}
+
+    function drawPipes() {
+      ctx.fillStyle = "#8e44ad";
+      pipes.forEach(p => {
+        if (bambooImg.complete && bambooImg.naturalHeight !== 0) {
+          ctx.drawImage(bambooImg, p.x, 0, pipeWidth, p.top); // bambu atas
+          ctx.drawImage(bambooImg, p.x, canvas.height - p.bottom, pipeWidth, p.bottom); // bambu bawah
+        } else {
+          ctx.fillRect(p.x, 0, pipeWidth, p.top);
+          ctx.fillRect(p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
+        }
+      });
+    }
 
     function update() {
       frame++;
@@ -83,7 +83,7 @@ bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtve
       if (frame % 100 === 0) {
         const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
         const bottom = canvas.height - top - pipeGap;
-        pipes.push({ x: canvas.width, top, bottom });
+        pipes.push({ x: canvas.width, top: top, bottom: bottom });
       }
 
       pipes.forEach((p, i) => {
@@ -100,13 +100,13 @@ bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtve
           (bird.y < p.top || bird.y + bird.height > canvas.height - p.bottom)
         ) {
           showGameOver(score);
-return;
+          return;
         }
       });
 
       if (bird.y + bird.height > canvas.height || bird.y < 0) {
         showGameOver(score);
-return;
+        return;
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -124,37 +124,42 @@ return;
       canvas.height = window.innerHeight;
     });
 
-    landakImg.onload = () => update();
+    landakImg.onload = () => {
+      bambooImg.onload = () => {
+        update();
+      };
+    };
+
     function showGameOver(score) {
-  const overlay = document.createElement('div');
-  overlay.innerHTML = `
-    <div style="
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-family: sans-serif;
-      z-index: 9999;
-    ">
-      <h1 style="font-size: 2em; margin-bottom: 10px;">Game Over!</h1>
-      <p style="font-size: 1.2em; margin-bottom: 20px;">Score: ${score}</p>
-      <button onclick="location.reload()" style="
-        padding: 10px 20px;
-        background: #9333ea;
-        border: none;
-        border-radius: 8px;
-        color: white;
-        font-weight: bold;
-        cursor: pointer;
-      ">Play Again</button>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-}
+      const overlay = document.createElement('div');
+      overlay.innerHTML = `
+        <div style="
+          position: fixed;
+          top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.85);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          color: white;
+          font-family: sans-serif;
+          z-index: 9999;
+        ">
+          <h1 style="font-size: 2em; margin-bottom: 10px;">Game Over!</h1>
+          <p style="font-size: 1.2em; margin-bottom: 20px;">Score: ${score}</p>
+          <button onclick="location.reload()" style="
+            padding: 10px 20px;
+            background: #9333ea;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+          ">Play Again</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
   </script>
 </body>
 </html>
