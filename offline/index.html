@@ -1,11 +1,72 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>Flappy Landak</title>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flappy Landak</title>
+  <script src="https://cdn.reown.com/appkit.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #0a0114;
+      color: white;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+    .connect-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: #9333ea;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="connect-btn" onclick="connectWallet()">Connect Wallet</button>
+
+  <script>
+    const modal = window.AppKit.createAppKit({
+      projectId: "afb01b80b7b30ce33f8a2824291b6432",
+      metadata: {
+        name: "Flappy Landak",
+        description: "Play and connect with Monad",
+        url: "https://javanese.vercel.app",
+        icons: ["https://assets.reown.com/reown-profile-pic.png"]
+      },
+      chainId: 10143,
+      auth: {
+        email: true,
+        social: ["google", "x", "discord", "lens", "farcaster", "facebook"],
+        wallet: true
+      },
+      ui: {
+        layout: "fullscreen",
+        theme: "dark"
+      }
+    });
+
+    async function connectWallet() {
+      try {
+        const user = await modal.connect();
+        if (user) {
+          alert("Wallet connected:\n" + user.address);
+          console.log("User:", user);
+        } else {
+          alert("User cancelled connection.");
+        }
+      } catch (err) {
+        alert("Error connecting wallet:\n" + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
 <style>
     html, body {
       margin: 0;
