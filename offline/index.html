@@ -1,106 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Offline Mode - 🦔 Sonic Hedgehog Jump</title>
+  <meta charset="UTF-8" />
+  <title>Offline Mode - Sonic Hedgie</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
       height: 100%;
+      width: 100%;
       font-family: sans-serif;
-      background: #111;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       overflow: hidden;
+      background: linear-gradient(to bottom, #0a021d, #100530, #000);
     }
     canvas {
-      background: #000;
-      border: 2px solid #555;
+      display: block;
+      background: transparent;
+      width: 100vw;
+      height: 100vh;
     }
-    h1 {
-      margin-bottom: 10px;
+    #score {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      z-index: 10;
+      text-shadow: 1px 1px 3px #000;
+    }
+    #replay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #9333ea;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      display: none;
+      z-index: 10;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transition: all 0.3s;
+    }
+    #replay:hover {
+      background: #a855f7;
     }
   </style>
 </head>
 <body>
-  <h1>No Internet? Main dulu bro!</h1>
-  <canvas id="gameCanvas" width="480" height="320"></canvas>
-
+  <div id="score">Score: 0</div>
+  <button id="replay" onclick="restart()">Play Again</button>
+  <canvas id="game"></canvas>
   <script>
-    const canvas = document.getElementById("gameCanvas");
+    const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
+    const scoreText = document.getElementById("score");
+    const replayBtn = document.getElementById("replay");
 
-    let hedgehog = { x: 50, y: 260, width: 30, height: 30, velocityY: 0, gravity: 1 };
-    let isJumping = false;
-    let obstacles = [];
-    let frame = 0;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let sonic = {
+      x: 100,
+      y: canvas.height - 100,
+      width: 60,
+      height: 60,
+      dy: 0,
+      gravity: 0.7,
+      jumpPower: -14,
+      grounded: true,
+      img: null
+    };
+
+    let obstacle = {
+      x: canvas.width,
+      y: canvas.height - 70,
+      width: 50,
+      height: 50,
+      speed: 5
+    };
+
     let score = 0;
+    let isGameOver = false;
 
-    function drawHedgehog() {
-      ctx.fillStyle = "#0ff";
-      ctx.fillRect(hedgehog.x, hedgehog.y, hedgehog.width, hedgehog.height);
+    sonic.img = new Image();
+    sonic.img.src = "https://upload.wikimedia.org/wikipedia/en/thumb/4/43/Sonic_the_Hedgehog.png/220px-Sonic_the_Hedgehog.png";
+
+    function drawSonic() {
+      ctx.drawImage(sonic.img, sonic.x, sonic.y, sonic.width, sonic.height);
     }
 
-    function drawObstacle(ob) {
-      ctx.fillStyle = "#f33";
-      ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+    function drawObstacle() {
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
     }
 
-    function gameLoop() {
+    function detectCollision() {
+      return (
+        sonic.x < obstacle.x + obstacle.width &&
+        sonic.x + sonic.width > obstacle.x &&
+        sonic.y < obstacle.y + obstacle.height &&
+        sonic.y + sonic.height > obstacle.y
+      );
+    }
+
+    function update() {
+      if (isGameOver) return;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Update hedgehog
-      if (hedgehog.y + hedgehog.height < canvas.height) {
-        hedgehog.velocityY += hedgehog.gravity;
-        hedgehog.y += hedgehog.velocityY;
+      sonic.y += sonic.dy;
+      sonic.dy += sonic.gravity;
+
+      if (sonic.y + sonic.height >= canvas.height - 10) {
+        sonic.y = canvas.height - 10 - sonic.height;
+        sonic.dy = 0;
+        sonic.grounded = true;
+      }
+
+      obstacle.x -= obstacle.speed;
+      if (obstacle.x + obstacle.width < 0) {
+        obstacle.x = canvas.width + Math.random() * 400;
+        score++;
+        scoreText.textContent = "Score: " + score;
+      }
+
+      drawSonic();
+      drawObstacle();
+
+      if (detectCollision()) {
+        isGameOver = true;
+        replayBtn.style.display = "block";
       } else {
-        hedgehog.velocityY = 0;
-        hedgehog.y = canvas.height - hedgehog.height;
-        isJumping = false;
+        requestAnimationFrame(update);
       }
-
-      drawHedgehog();
-
-      // Obstacle logic
-      if (frame % 90 === 0) {
-        obstacles.push({ x: canvas.width, y: 290, width: 20, height: 30 });
-      }
-
-      obstacles.forEach((ob, index) => {
-        ob.x -= 4;
-        drawObstacle(ob);
-        if (
-          hedgehog.x < ob.x + ob.width &&
-          hedgehog.x + hedgehog.width > ob.x &&
-          hedgehog.y < ob.y + ob.height &&
-          hedgehog.y + hedgehog.height > ob.y
-        ) {
-          alert("Game Over! Score: " + score);
-          document.location.reload();
-        }
-
-        if (ob.x + ob.width < 0) {
-          obstacles.splice(index, 1);
-          score++;
-        }
-      });
-
-      frame++;
-      requestAnimationFrame(gameLoop);
     }
 
-    window.addEventListener("keydown", () => {
-      if (!isJumping) {
-        hedgehog.velocityY = -15;
-        isJumping = true;
+    function jump() {
+      if (sonic.grounded) {
+        sonic.dy = sonic.jumpPower;
+        sonic.grounded = false;
       }
+    }
+
+    function restart() {
+      score = 0;
+      isGameOver = false;
+      scoreText.textContent = "Score: 0";
+      replayBtn.style.display = "none";
+      sonic.y = canvas.height - 100;
+      obstacle.x = canvas.width;
+      update();
+    }
+
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.code === "ArrowUp") jump();
     });
 
-    gameLoop();
+    window.addEventListener("touchstart", jump);
+
+    update();
   </script>
 </body>
 </html>
