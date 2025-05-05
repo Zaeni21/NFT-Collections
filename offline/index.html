@@ -146,32 +146,44 @@
   cursor: pointer;
 }
 </style>
-<!-- Sequence Wallet SDK -->
-<script src="https://cdn.sequence.xyz/web-sdk/sequence-connect-v2-latest.js"></script>
+<!-- Reown AppKit -->
+<script src="https://cdn.reown.com/appkit.js"></script>
 <script>
-  async function connectSequenceWallet() {
-    const { SequenceConnect } = window.SequenceConnect;
-
-    const wallet = new SequenceConnect({
-      projectAccessKey: "AQAAAAAAAKLUJ5WZe7Sg_ybHQmfexsCIq8I",
-      waasConfigKey: "eyJwcm9qZWN0SWQiOjQxNjg0LCJycGNTZXJ2ZXIiOiJodHRwczovL3dhYXMuc2VxdWVuY2UuYXBwIn0=",
-      defaultChainId: 10143,
-      theme: "dark",
-      signIn: {
-        projectName: "Javanese",
-        logoUrl: "https://storage.googleapis.com/sequence-prod-cluster-builder/projects/41684/wallet/signInlogoUrl_c3dde556b7fab6895155f607f7a092009782ee3dddabdfc47d99c2177e663a69.png"
-      }
-    });
-
-    try {
-      const connectedWallet = await wallet.connect();
-      console.log("Connected wallet:", connectedWallet);
-    } catch (err) {
-      alert("Gagal konek wallet");
-      console.error(err);
+  const appkit = window.AppKit.init({
+    projectId: "afb01b80b7b30ce33f8a2824291b6432",
+    chainId: 10143,
+    auth: {
+      email: true,
+      social: ["google", "x", "discord", "lens", "farcaster", "facebook"],
+      wallet: true
+    },
+    ui: {
+      layout: "default",
+      theme: "dark"
+    },
+    metadata: {
+      name: "Javanese",
+      description: "Flappy Landak",
+      url: "https://javanese.vercel.app/offline/index.html",
+      icons: ["https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m"]
     }
+  });
+
+  function connectWallet() {
+    appkit.connect().then(user => {
+      if (user) {
+        alert("Wallet connected:\n" + user.address);
+      } else {
+        alert("User cancelled connection");
+      }
+    }).catch(err => {
+      alert("Gagal connect wallet:\n" + err.message);
+    });
   }
 </script>
+
+<!-- Tombol -->
+<button onclick="connectWallet()">Connect Wallet</button>
 
 </head>
 <body
