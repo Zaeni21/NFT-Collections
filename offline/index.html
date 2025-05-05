@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Offline Game Mode</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      height: 100%;
+      font-family: sans-serif;
+      background: #111;
+      color: white;
+    }
+    #offline-game {
+      display: none;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    canvas {
+      background: black;
+      border: 2px solid white;
+    }
+  </style>
+</head>
+<body>
+
+<div id="offline-game">
+  <h2>No Internet Connection</h2>
+  <p>Press SPACE to jump!</p>
+  <canvas id="gameCanvas" width="600" height="200"></canvas>
+</div>
+
+<script>
+  function startGame() {
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let hedgehog = { x: 50, y: 150, width: 30, height: 30, dy: 0, jump: -7, gravity: 0.4, grounded: true };
+    let obstacle = { x: 600, y: 150, width: 20, height: 30, speed: 4 };
+    let gameOver = false;
+
+    function drawHedgehog() {
+      ctx.fillStyle = "#76c7c0";
+      ctx.fillRect(hedgehog.x, hedgehog.y, hedgehog.width, hedgehog.height);
+    }
+
+    function drawObstacle() {
+      ctx.fillStyle = "#f06292";
+      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Gravity
+      hedgehog.dy += hedgehog.gravity;
+      hedgehog.y += hedgehog.dy;
+
+      if (hedgehog.y > 150) {
+        hedgehog.y = 150;
+        hedgehog.dy = 0;
+        hedgehog.grounded = true;
+      }
+
+      // Obstacle movement
+      obstacle.x -= obstacle.speed;
+      if (obstacle.x + obstacle.width < 0) {
+        obstacle.x = 600;
+      }
+
+      // Collision
+      if (
+        hedgehog.x < obstacle.x + obstacle.width &&
+        hedgehog.x + hedgehog.width > obstacle.x &&
+        hedgehog.y < obstacle.y + obstacle.height &&
+        hedgehog.y + hedgehog.height > obstacle.y
+      ) {
+        gameOver = true;
+        alert("Game Over!");
+        document.location.reload();
+      }
+
+      drawHedgehog();
+      drawObstacle();
+
+      if (!gameOver) requestAnimationFrame(update);
+    }
+
+    document.addEventListener("keydown", function(e) {
+      if (e.code === "Space" && hedgehog.grounded) {
+        hedgehog.dy = hedgehog.jump;
+        hedgehog.grounded = false;
+      }
+    });
+
+    update();
+  }
+
+  function checkConnection() {
+    if (!navigator.onLine) {
+      document.getElementById("offline-game").style.display = "flex";
+      startGame();
+    }
+  }
+
+  window.addEventListener("load", checkConnection);
+</script>
+
+</body>
+</html>
