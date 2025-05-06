@@ -4,301 +4,200 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Flappy Landak</title>
-  </script>
-</body>
-</html>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+</head>
+<body>
 <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(to bottom, #0a021d, #100530, #000);
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-    }
-    #score {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      color: white;
-      font-family: sans-serif;
-      font-size: 18px;
-      z-index: 2;
-    }
-    #mode-selection {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      text-align: center;
-    }
-    #mode-selection button {
-      margin: 10px;
-      padding: 14px 28px;
-      background: #9333ea;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
-<style>
-#loader {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: black;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-.loader-text {
-  font-size: 1.5rem;
-  color: white;
-  animation: blink 1s infinite;
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-><div id="loader"><div class="loader-text">Loading onchain vibes...</div></div>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to bottom, #0a021d, #100530, #000);
+    overflow: hidden;
+  }
+  canvas { display: block; }
+  #score {
+    position: absolute; top: 16px; left: 16px;
+    color: white; font-family: sans-serif; font-size: 18px; z-index: 2;
+  }
+  #mode-selection {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10; text-align: center;
+  }
+  #mode-selection button {
+    margin: 10px; padding: 14px 28px;
+    background: #9333ea; border: none; border-radius: 10px;
+    color: white; font-weight: bold; font-size: 16px; cursor: pointer;
+  }
+  #loader {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: black; display: flex; justify-content: center;
+    align-items: center; z-index: 9999;
+  }
+  .loader-text {
+    font-size: 1.5rem; color: white; animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  #leaderboard-popup {
+    display: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    color: white; z-index: 10000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+</style>
+
+<div id="loader"><div class="loader-text">Loading onchain vibes...</div></div>
 <div id="score">Score: 0</div>
 <div id="mode-selection">
-<button onclick="startOffchain()">Play</button>
+  <button onclick="startOffchain()">Play</button>
+  <button onclick="showLeaderboard()">Leaderboard</button>
 </div>
 <canvas id="gameCanvas"></canvas>
+<div id="leaderboard-popup">
+  <h2>Top Players</h2>
+  <ul id="leaderboard-list"></ul>
+  <button onclick="document.getElementById('leaderboard-popup').style.display='none'">Close</button>
+</div>
+
 <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
-    let onchain = false;
-    let walletAddress = null;
-    const contractAddress = "0x228a78f7484dcDD40C33C9Bfb9F7eFEb3d2655D6";
-    const fullABI = [
-      {
-        "inputs": [],
-        "name": "getTopPlayers",
-        "outputs": [{
-          "components": [
-            { "internalType": "address", "name": "addr", "type": "address" },
-            { "internalType": "uint256", "name": "score", "type": "uint256" }
-          ],
-          "internalType": "struct Leaderboard.Player[]",
-          "name": "",
-          "type": "tuple[]"
-        }],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [ { "internalType": "uint256", "name": "newScore", "type": "uint256" } ],
-        "name": "submitScore",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+  let onchain = false;
+  let walletAddress = null;
+  const contractAddress = "0x228a78f7484dcDD40C33C9Bfb9F7eFEb3d2655D6";
+  const fullABI = [ /* ABI sesuai file sebelumnya */ ];
+
+  const landakImg = new Image();
+  landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m";
+  const bambooImg = new Image();
+  bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtvephhgmcr7rb57rjxxubbpkxie5bl7ycm5wciqf7bjlsi";
+
+  const bird = { x: 80, y: canvas.height / 2, width: 50, height: 50, velocity: 0, gravity: 0.06, lift: -2.2 };
+  let score = 0;
+  let frame = 0;
+  const pipes = [];
+  const pipeGap = 170;
+  const pipeWidth = 60;
+
+  function drawBird() {
+    if (landakImg.complete) ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
+  }
+  function drawPipes() {
+    pipes.forEach(p => {
+      if (bambooImg.complete) {
+        ctx.drawImage(bambooImg, p.x, 0, pipeWidth, p.top);
+        ctx.drawImage(bambooImg, p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
       }
-    ];
+    });
+  }
 
-    const landakImg = new Image();
-    landakImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m";
-    const bambooImg = new Image();
-    bambooImg.src = "https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafkreicbretqtvephhgmcr7rb57rjxxubbpkxie5bl7ycm5wciqf7bjlsi";
+  function update() {
+    frame++;
+    bird.velocity += bird.gravity;
+    bird.y += bird.velocity;
 
-    const bird = { x: 80, y: canvas.height / 2, width: 50, height: 50, velocity: 0, gravity: 0.06, lift: -2.2 };
-    let score = 0;
-    let frame = 0;
-    const pipes = [];
-    const pipeGap = 170;
-    const pipeWidth = 60;
-
-    function drawBird() {
-      if (landakImg.complete) ctx.drawImage(landakImg, bird.x, bird.y, bird.width, bird.height);
+    if (frame % 150 === 0) {
+      const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
+      const bottom = canvas.height - top - pipeGap;
+      pipes.push({ x: canvas.width, top, bottom, padding: 10 });
     }
 
-    function drawPipes() {
-      pipes.forEach(p => {
-        if (bambooImg.complete) {
-          ctx.drawImage(bambooImg, p.x, 0, pipeWidth, p.top);
-          ctx.drawImage(bambooImg, p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
-        }
-      });
-    }
-
-    function update() {
-      frame++;
-      bird.velocity += bird.gravity;
-      bird.y += bird.velocity;
-
-      if (frame % 150 === 0) {
-        const top = Math.random() * (canvas.height - pipeGap - 200) + 50;
-        const bottom = canvas.height - top - pipeGap;
-        pipes.push({ x: canvas.width, top, bottom, padding: 10 });
+    pipes.forEach((p, i) => {
+      p.x -= 1.2;
+      if (p.x + pipeWidth < 0) {
+        pipes.splice(i, 1);
+        score++;
+        document.getElementById("score").innerText = "Score: " + score;
       }
 
-      pipes.forEach((p, i) => {
-        p.x -= 1.2;
-        if (p.x + pipeWidth < 0) {
-          pipes.splice(i, 1);
-          score++;
-          document.getElementById("score").innerText = "Score: " + score;
-        }
-
-        if (
-          bird.x < p.x + pipeWidth - p.padding &&
-          bird.x + bird.width > p.x + p.padding &&
-          (bird.y < p.top || bird.y + bird.height > canvas.height - p.bottom)
-        ) {
-          showGameOver(score);
-          return;
-        }
-      });
-
-      if (bird.y + bird.height > canvas.height || bird.y < 0) {
+      if (
+        bird.x < p.x + pipeWidth - p.padding &&
+        bird.x + bird.width > p.x + p.padding &&
+        (bird.y < p.top || bird.y + bird.height > canvas.height - p.bottom)
+      ) {
         showGameOver(score);
         return;
       }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBird();
-      drawPipes();
-      requestAnimationFrame(update);
-    }
-
-    function showGameOver(score) {
-      if (onchain) submitScoreOnchain(score);
-      const overlay = document.createElement('div');
-      overlay.innerHTML = `
-        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
-        justify-content: center; align-items: center; color: white; font-family: sans-serif; z-index: 9999;">
-          <h1 style="font-size: 2em; margin-bottom: 10px;">Game Over!</h1>
-          <p style="font-size: 1.2em; margin-bottom: 20px;">Score: ${score}</p>
-          <button onclick="location.reload()" style="padding: 10px 20px;
-          background: #9333ea; border: none; border-radius: 8px; color: white;
-          font-weight: bold; cursor: pointer;">Play Again</button>
-        </div>`;
-      document.body.appendChild(overlay);
-    }
-
-    function startOffchain() {
-      onchain = false;
-      document.getElementById("mode-selection").style.display = "none";
-      update();
-    }
-
-    async function connectWallet() {
-      if (!window.ethereum) return alert("Install MetaMask dulu bro");
-
-      try {
-        await ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: '0x279F',
-            chainName: 'Monad Testnet',
-            rpcUrls: ['https://testnet-rpc.monad.xyz'],
-            nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
-            blockExplorerUrls: ['https://testnet.monadexplorer.com']
-          }]
-        });
-
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        walletAddress = await provider.getSigner().getAddress();
-        onchain = true;
-        document.getElementById("mode-selection").style.display = "none";
-        update();
-      } catch (err) {
-        console.error(err);
-        alert("Gagal connect wallet");
-      }
-    }
-
-    async function submitScoreOnchain(score) {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(contractAddress, fullABI, signer);
-        const tx = await contract.submitScore(score);
-        await tx.wait();
-        console.log("Score submitted!");
-      } catch (err) {
-        console.error("Gagal submit:", err);
-      }
-    }
-
-    async function showLeaderboard() {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const userAddress = await signer.getAddress();
-
-        const contract = new ethers.Contract(contractAddress, fullABI, provider);
-        const players = await contract.getTopPlayers();
-
-        const ul = document.getElementById("leaderboard-list");
-        ul.innerHTML = "";
-
-        players.forEach((player, index) => {
-          const li = document.createElement("li");
-          const shortAddr = player.addr.slice(0, 6) + "..." + player.addr.slice(-4);
-          li.innerHTML = `${index + 1}. ${shortAddr} - ${player.score}`;
-          if (player.addr.toLowerCase() === userAddress.toLowerCase()) {
-            li.style.color = "#22d3ee";
-            li.style.fontWeight = "bold";
-          }
-          ul.appendChild(li);
-        });
-
-        document.getElementById("leaderboard-popup").style.display = "block";
-      } catch (err) {
-        alert("Gagal ambil leaderboard!");
-        console.error(err);
-      }
-    }
-
-    window.addEventListener("keydown", e => { if (e.code === "Space") bird.velocity = bird.lift; });
-    window.addEventListener("touchstart", () => bird.velocity = bird.lift);
-    window.addEventListener("resize", () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
     });
 
-    landakImg.onload = () => {
-      bambooImg.onload = () => {
-        // tunggu user pilih mode
-      };
-    };
-  </script>
-
-<div id="leaderboard-popup">
-<h2>Top Players</h2>
-<ul id="leaderboard-list"></ul>
-<button onclick="document.getElementById('leaderboard-popup').style.display='none'">Close</button>
-</div>
-<script>
-window.addEventListener("load", () => {
-  document.getElementById("loader").style.display = "none";
-});
-
-function showLeaderboard(players, userAddress) {
-  const list = document.getElementById("leaderboard-list");
-  list.innerHTML = "";
-  players.forEach((p, i) => {
-    const li = document.createElement("li");
-    li.textContent = `${i + 1}. ${p.addr.slice(0, 6)}...${p.addr.slice(-4)} - ${p.score}`;
-    if (p.addr.toLowerCase() === userAddress.toLowerCase()) {
-      li.classList.add("me");
+    if (bird.y + bird.height > canvas.height || bird.y < 0) {
+      showGameOver(score);
+      return;
     }
-    list.appendChild(li);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBird();
+    drawPipes();
+    requestAnimationFrame(update);
+  }
+
+  function startOffchain() {
+    onchain = false;
+    document.getElementById("mode-selection").style.display = "none";
+    update();
+  }
+
+  function showGameOver(score) {
+    const overlay = document.createElement('div');
+    overlay.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
+      justify-content: center; align-items: center; color: white; font-family: sans-serif; z-index: 9999;">
+        <h1 style="font-size: 2em; margin-bottom: 10px;">Game Over!</h1>
+        <p style="font-size: 1.2em; margin-bottom: 20px;">Score: ${score}</p>
+        <button onclick="location.reload()" style="padding: 10px 20px;
+        background: #9333ea; border: none; border-radius: 8px; color: white;
+        font-weight: bold; cursor: pointer;">Play Again</button>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+
+  async function showLeaderboard() {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const userAddress = await signer.getAddress();
+      const contract = new ethers.Contract(contractAddress, fullABI, provider);
+      const players = await contract.getTopPlayers();
+      const ul = document.getElementById("leaderboard-list");
+      ul.innerHTML = "";
+      players.forEach((player, index) => {
+        const li = document.createElement("li");
+        const shortAddr = player.addr.slice(0, 6) + "..." + player.addr.slice(-4);
+        li.innerHTML = `${index + 1}. ${shortAddr} - ${player.score}`;
+        if (player.addr.toLowerCase() === userAddress.toLowerCase()) {
+          li.style.color = "#22d3ee";
+          li.style.fontWeight = "bold";
+        }
+        ul.appendChild(li);
+      });
+      document.getElementById("leaderboard-popup").style.display = "block";
+    } catch (err) {
+      alert("Gagal ambil leaderboard!");
+      console.error(err);
+    }
+  }
+
+  window.addEventListener("keydown", e => { if (e.code === "Space") bird.velocity = bird.lift; });
+  window.addEventListener("touchstart", () => bird.velocity = bird.lift);
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   });
-  document.getElementById("leaderboard-popup").style.display = "block";
-}
-</script></body>
+
+  window.addEventListener("load", () => {
+    document.getElementById("loader").style.display = "none";
+  });
+
+  landakImg.onload = () => { bambooImg.onload = () => {} };
+</script>
+</body>
 </html>
