@@ -158,7 +158,14 @@
         font-weight: bold; cursor: pointer;">Play Again</button>
       </div>`;
     document.body.appendChild(overlay);
-  }
+
+  // delay muncul tombol
+  setTimeout(() => {
+    const btn = document.getElementById("playAgainBtn");
+    btn.style.display = "block";
+    btn.addEventListener("click", () => location.reload());
+  }, 3000); // delay 3 detik
+}
 
   async function showLeaderboard() {
     try {
