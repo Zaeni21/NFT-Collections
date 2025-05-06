@@ -4,66 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Flappy Landak</title>
-  <script src="https://cdn.reown.com/appkit.js"></script>
-  <style>
-    body {
-      margin: 0;
-      background: #0a0114;
-      color: white;
-      font-family: sans-serif;
-      overflow: hidden;
-    }
-    .connect-btn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1000;
-      background: #9333ea;
-      color: white;
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <button class="connect-btn" onclick="connectWallet()">Connect Wallet</button>
-
-  <script>
-    const modal = window.AppKit.createAppKit({
-      projectId: "afb01b80b7b30ce33f8a2824291b6432",
-      metadata: {
-        name: "Flappy Landak",
-        description: "Play and connect with Monad",
-        url: "https://javanese.vercel.app",
-        icons: ["https://assets.reown.com/reown-profile-pic.png"]
-      },
-      chainId: 10143,
-      auth: {
-        email: true,
-        social: ["google", "x", "discord", "lens", "farcaster", "facebook"],
-        wallet: true
-      },
-      ui: {
-        layout: "fullscreen",
-        theme: "dark"
-      }
-    });
-
-    async function connectWallet() {
-      try {
-        const user = await modal.connect();
-        if (user) {
-          alert("Wallet connected:\n" + user.address);
-          console.log("User:", user);
-        } else {
-          alert("User cancelled connection.");
-        }
-      } catch (err) {
-        alert("Error connecting wallet:\n" + err.message);
-      }
-    }
   </script>
 </body>
 </html>
@@ -105,40 +45,6 @@
       font-size: 16px;
       cursor: pointer;
     }
-    #leaderboard-popup {
-      display: none;
-      position: fixed;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.95);
-      padding: 20px;
-      border-radius: 10px;
-      z-index: 9999;
-      width: 300px;
-      color: white;
-    }
-    #leaderboard-popup h3 {
-      text-align: center;
-    }
-    #leaderboard-popup ul {
-      list-style: none;
-      padding: 0;
-    }
-    #leaderboard-btn {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      z-index: 3;
-    }
-    #leaderboard-btn button {
-      padding: 10px 20px;
-      background: #4f46e5;
-      border: none;
-      color: white;
-      font-weight: bold;
-      border-radius: 8px;
-    }
   </style>
 <style>
 #loader {
@@ -160,112 +66,10 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
-
-#leaderboard-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 400px;
-  background: rgba(15, 10, 30, 0.95);
-  border: 2px solid #9333ea;
-  border-radius: 12px;
-  color: white;
-  z-index: 10000;
-  display: none;
-  padding: 20px;
-  font-family: sans-serif;
-  box-shadow: 0 0 20px #9333ea;
-}
-#leaderboard-popup h2 {
-  text-align: center;
-  margin-bottom: 1em;
-}
-#leaderboard-popup ul {
-  list-style: none;
-  padding: 0;
-  max-height: 250px;
-  overflow-y: auto;
-}
-#leaderboard-popup li {
-  padding: 6px 0;
-  border-bottom: 1px solid #444;
-}
-#leaderboard-popup li.me {
-  background: #4c1d95;
-  font-weight: bold;
-  border-radius: 8px;
-}
-#leaderboard-popup button {
-  margin-top: 15px;
-  padding: 8px 12px;
-  background: #9333ea;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-</style>
-<!-- Reown AppKit -->
-<script src="https://cdn.reown.com/appkit.js"></script>
-<script>
-  const appkit = window.AppKit.init({
-    projectId: "afb01b80b7b30ce33f8a2824291b6432",
-    chainId: 10143,
-    auth: {
-      email: true,
-      social: ["google", "x", "discord", "lens", "farcaster", "facebook"],
-      wallet: true
-    },
-    ui: {
-      layout: "default",
-      theme: "dark"
-    },
-    metadata: {
-      name: "Javanese",
-      description: "Flappy Landak",
-      url: "https://javanese.vercel.app/offline/index.html",
-      icons: ["https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m"]
-    }
-  });
-
-  function connectWallet() {
-    appkit.connect().then(user => {
-      if (user) {
-        alert("Wallet connected:\n" + user.address);
-      } else {
-        alert("User cancelled connection");
-      }
-    }).catch(err => {
-      alert("Gagal connect wallet:\n" + err.message);
-    });
-  }
-</script>
-
-<!-- Tombol -->
-<button onclick="connectWallet()">Connect Wallet</button>
-
-</head>
-<body
-
-<!-- Connect Wallet Button -->
-<button onclick="connectSequenceWallet()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background: #9333ea; color: white; padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer;">
-  Connect Wallet
-</button>
 ><div id="loader"><div class="loader-text">Loading onchain vibes...</div></div>
 <div id="score">Score: 0</div>
 <div id="mode-selection">
-<button onclick="startOffchain()">Play Offchain</button>
-<button onclick="connectWallet()">Play Onchain (Monad)</button>
-</div>
-<div id="leaderboard-btn">
-<button onclick="showLeaderboard()">Leaderboard</button>
-</div>
-<div id="leaderboard-popup">
-<h3>Top 10 Players</h3>
-<ul id="leaderboard-list"></ul>
-<button onclick="document.getElementById('leaderboard-popup').style.display='none'">Close</button>
+<button onclick="startOffchain()">Play</button>
 </div>
 <canvas id="gameCanvas"></canvas>
 <script>
