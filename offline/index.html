@@ -185,6 +185,19 @@
 <!-- Tombol -->
 <button onclick="connectWallet()">Connect Wallet</button>
 
+
+<!-- Wallet Connect UI -->
+<div class="relative" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+  <div class="flex items-center space-x-2 bg-gray-900 px-3 py-1 rounded-full cursor-pointer" id="walletAddress">
+    <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+    <span class="text-sm">Connect Wallet</span>
+  </div>
+  <div class="absolute right-0 mt-2 bg-gray-800 border border-gray-600 p-3 rounded hidden z-50" id="walletPopup">
+    <p class="text-green-400 text-sm mb-2">Connected</p>
+    <button class="bg-red-600 hover:bg-red-700 px-2 py-1 text-xs rounded" onclick="disconnectWallet()">Disconnect</button>
+  </div>
+</div>
+
 </head>
 <body
 
@@ -436,4 +449,51 @@ function showLeaderboard(players, userAddress) {
   document.getElementById("leaderboard-popup").style.display = "block";
 }
 </script></body>
+
+<script>
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+  const monadChain = {
+    chainId: '0x279F',
+    chainName: 'Monad Testnet',
+    rpcUrls: ['https://testnet-rpc.monad.xyz'],
+    nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
+    blockExplorerUrls: ['https://testnet.monadexplorer.com']
+  };
+
+  let isConnected = false;
+
+  async function connectWallet() {
+    try {
+      await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [monadChain] });
+      await provider.send("eth_requestAccounts", []);
+      const address = await signer.getAddress();
+      document.getElementById('walletAddress').innerHTML = `
+        <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+        <span class="text-sm">${address.slice(0, 5)}...${address.slice(-3)}</span>`;
+      document.getElementById('walletPopup').classList.remove('hidden');
+      isConnected = true;
+    } catch (err) {
+      console.error(err);
+      alert("Gagal connect wallet");
+    }
+  }
+
+  function disconnectWallet() {
+    isConnected = false;
+    document.getElementById('walletPopup').classList.add('hidden');
+    document.getElementById('walletAddress').innerHTML = `
+      <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+      <span class="text-sm">Connect Wallet</span>`;
+  }
+
+  document.getElementById('walletAddress').addEventListener('click', async () => {
+    if (!isConnected) {
+      await connectWallet();
+    } else {
+      document.getElementById('walletPopup').classList.toggle('hidden');
+    }
+  });
+</script>
+
 </html>
