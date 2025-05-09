@@ -148,39 +148,7 @@
 </style>
 <!-- Reown AppKit -->
 <script src="https://cdn.reown.com/appkit.js"></script>
-<script>
-  const appkit = window.AppKit.init({
-    projectId: "afb01b80b7b30ce33f8a2824291b6432",
-    chainId: 10143,
-    auth: {
-      email: true,
-      social: ["google", "x", "discord", "lens", "farcaster", "facebook"],
-      wallet: true
-    },
-    ui: {
-      layout: "default",
-      theme: "dark"
-    },
-    metadata: {
-      name: "Javanese",
-      description: "Flappy Landak",
-      url: "https://javanese.vercel.app/offline/index.html",
-      icons: ["https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeic2hc4o3ivhtoa3urf4ehgguiehi5crbl2evry5qydcsq2g4ejg7m"]
-    }
-  });
 
-  function connectWallet() {
-    appkit.connect().then(user => {
-      if (user) {
-        alert("Wallet connected:\n" + user.address);
-      } else {
-        alert("User cancelled connection");
-      }
-    }).catch(err => {
-      alert("Gagal connect wallet:\n" + err.message);
-    });
-  }
-</script>
 <!-- Tombol -->
 <button onclick="connectWallet()">Connect Wallet</button>
 <!-- Wallet Connect UI -->
@@ -195,9 +163,7 @@
 <button class="bg-red-600 hover:bg-red-700 px-2 py-1 text-xs rounded" onclick="disconnectWallet()">Disconnect</button>
 </div>
 </div>
-<button onclick="connectSequenceWallet()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background: #9333ea; color: white; padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer;">
-  Connect Wallet
-</button>
+
 &gt;<div id="loader"><div class="loader-text">Loading onchain vibes...</div></div>
 <div id="score">Score: 0</div>
 <div id="mode-selection">
