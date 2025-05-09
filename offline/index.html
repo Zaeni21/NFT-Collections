@@ -181,31 +181,24 @@
     });
   }
 </script>
-
 <!-- Tombol -->
 <button onclick="connectWallet()">Connect Wallet</button>
-
-
 <!-- Wallet Connect UI -->
-<div class="relative" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-  <div class="flex items-center space-x-2 bg-gray-900 px-3 py-1 rounded-full cursor-pointer" id="walletAddress">
-    <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
-    <span class="text-sm">Connect Wallet</span>
-  </div>
-  <div class="absolute right-0 mt-2 bg-gray-800 border border-gray-600 p-3 rounded hidden z-50" id="walletPopup">
-    <p class="text-green-400 text-sm mb-2">Connected</p>
-    <button class="bg-red-600 hover:bg-red-700 px-2 py-1 text-xs rounded" onclick="disconnectWallet()">Disconnect</button>
-  </div>
-</div>
-
 </head>
-<body
-
-<!-- Connect Wallet Button -->
+<body --="" <!--="" button="" connect="" wallet=""><div class="relative" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+<div class="flex items-center space-x-2 bg-gray-900 px-3 py-1 rounded-full cursor-pointer" id="walletAddress">
+<div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+<span class="text-sm">Connect Wallet</span>
+</div>
+<div class="absolute right-0 mt-2 bg-gray-800 border border-gray-600 p-3 rounded hidden z-50" id="walletPopup">
+<p class="text-green-400 text-sm mb-2">Connected</p>
+<button class="bg-red-600 hover:bg-red-700 px-2 py-1 text-xs rounded" onclick="disconnectWallet()">Disconnect</button>
+</div>
+</div>
 <button onclick="connectSequenceWallet()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background: #9333ea; color: white; padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer;">
   Connect Wallet
 </button>
-><div id="loader"><div class="loader-text">Loading onchain vibes...</div></div>
+&gt;<div id="loader"><div class="loader-text">Loading onchain vibes...</div></div>
 <div id="score">Score: 0</div>
 <div id="mode-selection">
 <button onclick="startOffchain()">Play Offchain</button>
@@ -424,7 +417,6 @@
       };
     };
   </script>
-
 <div id="leaderboard-popup">
 <h2>Top Players</h2>
 <ul id="leaderboard-list"></ul>
@@ -449,7 +441,6 @@ function showLeaderboard(players, userAddress) {
   document.getElementById("leaderboard-popup").style.display = "block";
 }
 </script></body>
-
 <script>
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
@@ -495,5 +486,4 @@ function showLeaderboard(players, userAddress) {
     }
   });
 </script>
-
 </html>
