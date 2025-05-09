@@ -148,11 +148,6 @@
   cursor: pointer;
 }
   </style>
-  <!-- Reown AppKit -->
-  <script src="https://cdn.reown.com/appkit.js">
-  </script>
-  <!-- Tombol -->
-  <!-- Wallet Connect UI -->
  </head>
  <body --="" <!--="" button="" connect="" wallet="">
   <div class="relative" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
@@ -409,7 +404,7 @@
         // tunggu user pilih mode
       };
     };
-  </script>
+  <script>
   <div id="leaderboard-popup">
    <h2>
     Top Players
@@ -438,8 +433,6 @@ function showLeaderboard(players, userAddress) {
   });
   document.getElementById("leaderboard-popup").style.display = "block";
 }
-  </script>
- </body>
  <script>
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
@@ -484,5 +477,6 @@ function showLeaderboard(players, userAddress) {
       document.getElementById('walletPopup').classList.toggle('hidden');
     }
   });
- </script>
+   </script>
+ </body>
 </html>
